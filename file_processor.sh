@@ -9,7 +9,7 @@ function processor() {
     echo "$country"
     test -d "$country" && continue;
     country_error="$country"
-    ogr2ogr -f GeoJSON -where "gu_a3 = '$country'" states.json source_data/ne_10m_admin_1_states_provinces_lakes.shp && \
+    ogr2ogr -f GeoJSON -where "adm0_a3 = \"$country\"" states.json source_data/ne_10m_admin_1_states_provinces_lakes.shp && \
     mapshaper states.json -simplify 30% -o && \
     rm states.json && \
     mv states-ms.json states.json && \
@@ -24,14 +24,14 @@ function processor() {
       continue;
     fi
     oldifs=$IFS && IFS=$'\n'
-    states=( $(ogrinfo source_data/ne_10m_admin_1_states_provinces_lakes.shp -q -sql "SELECT adm1_cod_1, name FROM ne_10m_admin_1_states_provinces_lakes WHERE adm0_a3 = '$country' GROUP BY adm1_cod_1" -dialect SQLITE -geom=NO -q | sed 's/OGRFeature.*//p' | sed 's/Layer name.*//p' | grep . | sed 'N;s/\n//g' | sed -En 's/  adm1_cod_1 \(String\) = (.*)  name \(String\) = (.*)/\1\n\2/p') )
+    states=( $(ogrinfo source_data/ne_10m_admin_1_states_provinces_lakes.shp -q -sql "SELECT adm1_cod_1, name FROM ne_10m_admin_1_states_provinces_lakes WHERE adm0_a3 = \"$country\" GROUP BY adm1_cod_1" -dialect SQLITE -geom=NO -q | sed 's/OGRFeature.*//p' | sed 's/Layer name.*//p' | grep . | sed 'N;s/\n//g' | sed -En 's/  adm1_cod_1 \(String\) = (.*)  name \(String\) = (.*)/\1\n\2/p') )
     IFS=$oldifs
     state_errors=()
     for (( i=0; i < "${#states[@]}"; i+=2 )); do
       state_id="${states[i]}"
       state_name="${states[i+1]}"
       state_error="$state_id"
-      ogr2ogr -f GeoJSON -where "ADM0_A3 = '$country' AND ADM1NAME = '$state_name'" cities.json source_data/ne_10m_populated_places.shp && \
+      ogr2ogr -f GeoJSON -where "ADM0_A3 = \"$country\" AND ADM1NAME = \"$state_name\"" cities.json source_data/ne_10m_populated_places.shp && \
       topojson -p name=NAME -p state=ADM1NAME -o cities.topo.json cities.json && \
       mv cities.topo.json "$country"/"$state_id"_cities.topo.json && \
       state_error=;

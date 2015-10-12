@@ -19,7 +19,7 @@ function processor() {
     test -d "$country" && continue;
     country_error="$country"
     # select the country from the shapefile, convert it to geojson
-    ogr2ogr -f GeoJSON -where "gu_a3 = '$country'" states.json source_data/ne_10m_admin_1_states_provinces_lakes.shp && \
+    ogr2ogr -f GeoJSON -where "adm0_a3 = \"$country\"" states.json source_data/ne_10m_admin_1_states_provinces_lakes.shp && \
     # use mapshaper to simplify the geojson file to make it smaller for the web
     mapshaper states.json -simplify 30% -o && \
     # clean up files
@@ -53,7 +53,7 @@ function processor() {
     # The 3rd sed concatenates every 2 lines into 1 for easier processing
     # the 4th sed uses regex to capture the values we want and return them, 
     # separated by a newline so bash will make them separate elements in our array
-    states=( $(ogrinfo source_data/ne_10m_admin_1_states_provinces_lakes.shp -q -sql "SELECT adm1_cod_1, name FROM ne_10m_admin_1_states_provinces_lakes WHERE adm0_a3 = '$country' GROUP BY adm1_cod_1" -dialect SQLITE -geom=NO -q | sed 's/OGRFeature.*//p' | sed 's/Layer name.*//p' | grep . | sed 'N;s/\n//g' | sed -En 's/  adm1_cod_1 \(String\) = (.*)  name \(String\) = (.*)/\1\n\2/p') )
+    states=( $(ogrinfo source_data/ne_10m_admin_1_states_provinces_lakes.shp -q -sql "SELECT adm1_cod_1, name FROM ne_10m_admin_1_states_provinces_lakes WHERE adm0_a3 = \"$country\" GROUP BY adm1_cod_1" -dialect SQLITE -geom=NO -q | sed 's/OGRFeature.*//p' | sed 's/Layer name.*//p' | grep . | sed 'N;s/\n//g' | sed -En 's/  adm1_cod_1 \(String\) = (.*)  name \(String\) = (.*)/\1\n\2/p') )
     # reset IFS
     IFS=$oldifs
     # initialize state-level errors array
@@ -65,7 +65,7 @@ function processor() {
       state_name="${states[i+1]}"
       state_error="$state_id"
       # select cities in the current country and state, save a geojson
-      ogr2ogr -f GeoJSON -where "ADM0_A3 = '$country' AND ADM1NAME = '$state_name'" cities.json source_data/ne_10m_populated_places.shp && \
+      ogr2ogr -f GeoJSON -where "ADM0_A3 = \"$country\" AND ADM1NAME = \"$state_name\"" cities.json source_data/ne_10m_populated_places.shp && \
       # convert geojson to topojson, preserving name and state name
       topojson -p name=NAME -p state=ADM1NAME -o cities.topo.json cities.json && \
       # move and rename the file to follow our name scheme
