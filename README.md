@@ -12,3 +12,5 @@ This is a little bash script that I used to convert country, state, and city dat
 Be sure to check out the annotated source if you're curious about how it works.
 
 Feel free to use, change, and share as you see fit! 
+
+[![ghit.me](https://ghit.me/badge.svg?repo=hammeiam/diligent_ogr)](https://ghit.me/repo/hammeiam/diligent_ogr)
